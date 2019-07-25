@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/ldfssz1/ST_META/share/User/zhujie/.conda/envs/bioenv/bin/python
 
 import subprocess
 import sys
