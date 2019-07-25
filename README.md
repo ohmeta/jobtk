@@ -6,5 +6,5 @@ git clone https://github.com/ohmeta/sgetk
 ```
 
 * Run  
-You know
+You know how to run.
 
