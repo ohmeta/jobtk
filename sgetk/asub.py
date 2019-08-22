@@ -13,7 +13,7 @@ from datetime import datetime
 __author__ = 'Jie Zhu'
 __email__ = 'zhujie@genomics.cn'
 __version__ = '0.3.1'
-__date__ = 'Jun 19, 2018'
+__date__ = 'Aug 22, 2019'
 
 
 def parse_job(job_name, job_file, a_job_line, logdir):
@@ -32,7 +32,7 @@ def parse_job(job_name, job_file, a_job_line, logdir):
 
 
 def submit_job(job_name, total_job_num, queue, prj_id, resource, logdir):
-    submit_f = os.path.join(os.path.curdir, job_name.rstrip(".sh") + "_submit.sh")
+    submit_f = os.path.join(os.path.dirname(logdir), job_name.rstrip(".sh") + "_submit.sh")
     array_range = "1-" + str(total_job_num) + ":1"
     job_script = os.path.join(logdir, job_name.rstrip(".sh") + "_$SGE_TASK_ID.sh")
     num_proc = resource.split('=')[-1]
@@ -65,8 +65,8 @@ def main():
     parser.add_argument('-jobline', type=int, help='set the number of lines to form a job', default=1)
     parser.add_argument('-queue', type=str, help='submit queue', default='st.q')
     parser.add_argument('-project', type=str, help='project id', default='P18Z10200N0127')
-    parser.add_argument('-resource',type=str, help='resourse requirment', default='vf=1G,p=1')
-    parser.add_argument('-logdir', type=str, help='array job log directory')
+    parser.add_argument('-resource', type=str, help='resourse requirment', default='vf=1G,p=1')
+    parser.add_argument('-logdir', type=str, default=None, help='array job log directory')
     args = parser.parse_args()
 
     assert re.match(r'vf=[\d\.]+\w,p=\d+', args.resource), "please specific memory usage and number processor"
@@ -75,12 +75,15 @@ def main():
 
     args.jobname += "_" + datetime.now().strftime("%Y%m%d%H%M%S")
 
-    if not args.logdir:
+    if args.logdir is None:
         args.logdir = args.jobname + "_qsub"
-    args.logdir = args.logdir.rstrip("/") + "/"
-
-    if os.path.exists(args.logdir):
-        os.remove(args.logdir)
+    else:
+        args.logdir = args.logdir.rstrip("/")
+        if (args.logdir == ".") or (args.logdir == "~") or (args.logdir == os.path.expanduser("~")):
+            args.logdir = os.path.join(args.logdir, args.jobname + "_qsub")
+    #if os.path.exists(args.logdir):
+    #    os.remove(args.logdir)
+    print(args.logdir)
     os.makedirs(args.logdir)
 
     total_job_num = parse_job(args.jobname, args.jobfile, args.jobline, args.logdir)
