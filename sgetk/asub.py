@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # please see https://github.com/lh3/asub
 import argparse
 import fileinput
@@ -40,6 +40,7 @@ def submit_job(job_name, total_job_num, queue, prj_id, resource, logdir):
         submit_h.write('''#!/bin/bash\n\
 #$ -clear
 #$ -S /bin/bash
+#$ -V
 #$ -N %s
 #$ -cwd
 #$ -l %s
@@ -54,7 +55,7 @@ bash $jobscript\n''' % (job_name, resource, num_proc, queue, prj_id, array_range
     submit_cmd = shutil.which("qsub") + \
                  " -e " + os.path.join(logdir, job_name + "_\\$TASK_ID.e") + \
                  " -o " + os.path.join(logdir, job_name + "_\\$TASK_ID.o") + " " + submit_f
-    print(submit_cmd)
+    #print(submit_cmd)
     subprocess.call(submit_cmd, shell=True)
 
 def main():
@@ -65,7 +66,7 @@ def main():
     parser.add_argument('-jobline', type=int, help='set the number of lines to form a job', default=1)
     parser.add_argument('-queue', type=str, help='submit queue', default='st.q')
     parser.add_argument('-project', type=str, help='project id', default='P18Z10200N0127')
-    parser.add_argument('-resource', type=str, help='resourse requirment', default='vf=1G,p=1')
+    parser.add_argument('-resource', type=str, help='resourse requirment', default='vf=50M,p=1')
     parser.add_argument('-logdir', type=str, default=None, help='array job log directory')
     args = parser.parse_args()
 
@@ -83,7 +84,7 @@ def main():
             args.logdir = os.path.join(args.logdir, args.jobname + "_qsub")
     #if os.path.exists(args.logdir):
     #    os.remove(args.logdir)
-    print(args.logdir)
+    #print(args.logdir)
     os.makedirs(args.logdir)
 
     total_job_num = parse_job(args.jobname, args.jobfile, args.jobline, args.logdir)
