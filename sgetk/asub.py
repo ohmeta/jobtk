@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # please see https://github.com/lh3/asub
 import argparse
-import fileinput
 import os
 import re
 import shutil
 import stat
 import subprocess
 import sys
+import pandas as pd
 from datetime import datetime
 
 __author__ = 'Jie Zhu'
@@ -17,46 +17,51 @@ __date__ = 'Aug 22, 2019'
 
 
 def parse_job(job_name, job_file, a_job_line, logdir):
-    with fileinput.input(files=job_file if not job_file is None else ('-', )) as in_h:
-        job_num = 0
-        for one_line in in_h:
-            job_num += 1
-            job_f = os.path.join(logdir, job_name.rstrip(".sh") + "_" + str(job_num) + ".sh")
-            with open(job_f, 'w') as job_h:
-                job_h.write(one_line)
-                while fileinput.lineno() % a_job_line != 0:
-                    job_h.write(next(in_h))
-                #for i in range(1, a_job_line):
-                #    job_h.write(next(in_h))
-        return job_num
+    df_list = []
+    df = pd.DataFrame()
+    if job_file is not None:
+        for f in job_file:
+            df = pd.read_csv(f, sep='\t', names=["script"])
+            df_list.append(df)
+        df = pd.concat(df_list)
+    else:
+        df = pd.read_csv(sys.stdin, sep='\t', names=["script"])
+    job_num = 0
+    for i in range(0, len(df), a_job_line):
+        job_num += 1
+        job_f = os.path.join(logdir, f"{job_name}_{job_num}.sh")
+        df.iloc[i:i+a_job_line]\
+          .to_csv(job_f, sep='\t', index=False, header=False)
+    return job_num
 
 
 def submit_job(job_name, total_job_num, queue, prj_id, resource, logdir):
-    submit_f = os.path.join(os.path.dirname(logdir), job_name.rstrip(".sh") + "_submit.sh")
-    array_range = "1-" + str(total_job_num) + ":1"
-    job_script = os.path.join(logdir, job_name.rstrip(".sh") + "_$SGE_TASK_ID.sh")
+    submit_f = os.path.join(os.path.dirname(logdir), f"{job_name}_submit.sh")
+    array_range = f"1-{total_job_num}:1"
+    job_script = os.path.join(logdir, f"{job_name}_$SGE_TASK_ID.sh")
     num_proc = resource.split('=')[-1]
     with open(submit_f, 'w') as submit_h:
-        submit_h.write('''#!/bin/bash\n\
+        submit_h.write(f'''#!/bin/bash\n\
 #$ -clear
 #$ -S /bin/bash
 #$ -V
-#$ -N %s
+#$ -N {job_name}
 #$ -cwd
-#$ -l %s
-#$ -binding linear:%s
-#$ -q %s
-#$ -P %s
-#$ -t %s
-jobscript=%s
-bash $jobscript\n''' % (job_name, resource, num_proc, queue, prj_id, array_range, job_script))
+#$ -l {resource}
+#$ -binding linear:{num_proc}
+#$ -q {queue}
+#$ -P {prj_id}
+#$ -t {array_range}
+jobscript={job_script}
+bash $jobscript\n''')
 
     os.chmod(submit_f, stat.S_IRWXU)
-    submit_cmd = shutil.which("qsub") + \
-                 " -e " + os.path.join(logdir, job_name + "_\\$TASK_ID.e") + \
-                 " -o " + os.path.join(logdir, job_name + "_\\$TASK_ID.o") + " " + submit_f
-    #print(submit_cmd)
+    error = os.path.join(logdir, f"{job_name}_\\$TASK_ID.e")
+    output = os.path.join(logdir, f"{job_name}_\\$TASK_ID.o")
+    qsub = shutil.which("qsub")
+    submit_cmd = f"{qsub} -e {error} -o {output} {submit_f}"
     subprocess.call(submit_cmd, shell=True)
+
 
 def main():
     '''it is a very simple script to submit array job, but you need supply real run command'''

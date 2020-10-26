@@ -79,11 +79,11 @@ for line in sys.stdin:
         ncor = 0
         nthr = 0
 
-        if line_list[9] != "-":
+        if line_list[9] != "-" and line_list[9] != "0.0":
             mem_swap = human2bytes(line_list[9])
         else:
             node_died.add(line_list[0])
-        if line_list[10] != "-":
+        if line_list[10] != "-" and line_list[10] != "0.0":
             mem_swap_used = human2bytes(line_list[10])
         else:
             node_died.add(line_list[0])
@@ -91,21 +91,21 @@ for line in sys.stdin:
         if mem_swap / 3 < mem_swap_used:
             node_danger.add(line_list[0])
 
-        if line_list[7] != "-":
+        if line_list[7] != "-" and line_list[7] != "0.0":
             mem_total = human2bytes(line_list[7])
         else:
             node_died.add(line_list[0])
 
-        if line_list[8] != '-':
+        if line_list[8] != '-' and line_list[9] != "0.0":
             mem_used = human2bytes(line_list[8])
         else:
             node_died.add(line_list[0])
 
-        if line_list[4] != "-":
+        if line_list[4] != "-" and line_list[4] != "0.0":
             ncor = int(line_list[4])
         else:
             node_died.add(line_list[0])
-        if line_list[5] != "-":
+        if line_list[5] != "-" and line_list[5] != "0.0":
             nthr = int(line_list[5])
         else:
             node_died.add(line_list[0])
