@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # please see https://github.com/lh3/asub
 import argparse
+import csv
 import os
 import re
 import shutil
@@ -31,7 +32,7 @@ def parse_job(job_name, job_file, a_job_line, logdir):
         job_num += 1
         job_f = os.path.join(logdir, f"{job_name}_{job_num}.sh")
         df.iloc[i:i+a_job_line]\
-          .to_csv(job_f, sep='\t', index=False, header=False)
+          .to_csv(job_f, sep='\t', index=False, header=False, quoting=csv.QUOTE_NONE)
     return job_num
 
 
