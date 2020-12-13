@@ -52,6 +52,12 @@ def human2bytes(s):
 
 
 count = 0
+count_500G = 0
+count_300G = 0
+count_200G = 0
+count_100G = 0
+count_0G = 0
+
 total_mem = 0.0
 total_ncor = 0
 total_nthr = 0
@@ -93,6 +99,17 @@ for line in sys.stdin:
 
         if line_list[7] != "-" and line_list[7] != "0.0":
             mem_total = human2bytes(line_list[7])
+            mem_tag = mem_total / 1000000000
+            if mem_tag >= 500:
+                count_500G += 1
+            elif mem_tag >= 300:
+                count_300G += 1
+            elif mem_tag >= 200:
+                count_200G += 1
+            elif mem_tag >= 100:
+                count_100G += 1
+            else:
+                count_0G += 1
         else:
             node_died.add(line_list[0])
 
@@ -126,6 +143,12 @@ for line in sys.stdin:
 
 print("\nsummary:")
 print("total st.q computer node : %d" % (count - 3))
+print("total st.q computer node (500G ~ ) : %d" % count_500G)
+print("total st.q computer node (300G ~ 500G): %d" % count_300G)
+print("total st.q computer node (200G ~ 300G): %d" % count_200G)
+print("total st.q computer node (100G ~ 200G): %d" % count_100G)
+print("total st.q computer node (0G   ~ 100G): %d" % count_0G)
+
 print("total st.q cpu cores: %d" % total_ncor)
 print("total st.q cpu threads: %d" % total_nthr)
 print("total st.q memory: %s" % bytes2human(total_mem))
