@@ -39,7 +39,7 @@ def human2bytes(s):
         if letter in sset:
             break
     else:
-        if letter == 'k':
+        if letter == 'k' or letter == "m" or letter == "g":
             # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
             sset = SYMBOLS['customary']
             letter = letter.upper()
@@ -141,7 +141,7 @@ def main():
                 mem_can_use = mem_total - mem_used
             total_mem_can_use += mem_can_use
             print(line.strip() + " " + bytes2human(mem_can_use))
-            
+
     print("\nsummary:")
     print("total st.q computer node : %d" % (count - 3))
     print("total st.q computer node (500G ~ ) : %d" % count_500G)
