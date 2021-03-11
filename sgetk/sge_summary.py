@@ -33,7 +33,10 @@ def human2bytes(s):
     while s and s[0:1].isdigit() or s[0:1] == '.':
         num += s[0]
         s = s[1:]
-    num = float(num)
+    if num != "":
+        num = float(num)
+    else:
+        raise ValueError(f"can't covert {s} to float")
     letter = s.strip()
     #print(letter)
     for name, sset in SYMBOLS.items():
