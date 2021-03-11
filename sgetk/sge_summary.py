@@ -35,11 +35,12 @@ def human2bytes(s):
         s = s[1:]
     num = float(num)
     letter = s.strip()
+    print(letter)
     for name, sset in SYMBOLS.items():
         if letter in sset:
             break
     else:
-        if letter == 'k' or letter == "m" or letter == "g":
+        if (letter == 'k') or (letter == "m") or (letter == "g"):
             # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
             sset = SYMBOLS['customary']
             letter = letter.upper()
