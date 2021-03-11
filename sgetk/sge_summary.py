@@ -35,7 +35,7 @@ def human2bytes(s):
         s = s[1:]
     num = float(num)
     letter = s.strip()
-    print(letter)
+    #print(letter)
     for name, sset in SYMBOLS.items():
         if letter in sset:
             break
