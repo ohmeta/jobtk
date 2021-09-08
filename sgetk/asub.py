@@ -69,8 +69,8 @@ def submit_job_slurm(job_name, total_job_num, partition, node, threads, logdir):
     submit_f = os.path.join(os.path.dirname(logdir), f"{job_name}_submit.sh")
     array_range = f"1-{total_job_num}:1"
     job_script = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.sh''')
-    job_o = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.o''')
-    job_e = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.e''')
+    job_o = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.o''')
+    job_e = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.e''')
 
     with open(submit_f, 'w') as submit_h:
         submit_h.write(f'''#!/bin/bash\n\
