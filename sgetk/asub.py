@@ -65,12 +65,13 @@ bash $jobscript\n''')
     subprocess.call(submit_cmd, shell=True)
 
 
-def submit_job_slurm(job_name, total_job_num, partition, node, threads, logdir):
+def submit_job_slurm(job_name, total_job_num, partition_list, node, threads, logdir):
     submit_f = os.path.join(os.path.dirname(logdir), f"{job_name}_submit.sh")
     array_range = f"1-{total_job_num}:1"
     job_script = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.sh''')
     job_o = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.o''')
     job_e = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.e''')
+    partition = ",".join(partition_list)
 
     with open(submit_f, 'w') as submit_h:
         submit_h.write(f'''#!/bin/bash\n\
@@ -78,15 +79,17 @@ def submit_job_slurm(job_name, total_job_num, partition, node, threads, logdir):
 #SBATCH -p {partition}
 #SBATCH -N {node} 
 #SBATCH --cpus-per-task={threads}
-#SBATCH -o {job_o}
-#SBATCH -e {job_e}
 #SBATCH -a {array_range}
+
+echo "output: {job_o}"
+echo "error: {job_e}"
 bash {job_script}\n''')
 
     os.chmod(submit_f, 0o744)
     sbatch = shutil.which("sbatch")
-    submit_cmd = f"{sbatch} {submit_f}"
-    #subprocess.call(submit_cmd, shell=True)
+    submit_cmd = f"{sbatch} -o {job_o} -e {job_e} {submit_f}"
+    print(f"Running: {submit_cmd}")
+    subprocess.call(submit_cmd, shell=True)
 
 
 def main():
@@ -98,7 +101,7 @@ def main():
     parser.add_argument('-jobline', type=int, help='set the number of lines to form a job, default: 1', default=1)
     parser.add_argument('-queue', type=str, help='submit queue, sge needed, default: st.q', default='st.q')
     parser.add_argument('-project', type=str, help='project id, sge needed, default: st.m', default='st.m')
-    parser.add_argument('-partition', type=str, help='partition, slurm needed, default: intel', default='intel')
+    parser.add_argument('-partition', nargs='*', help='partition, slurm needed, default: ["intel", "amd"]', default=['intel', 'amd'])
     parser.add_argument('-node', type=str, help='nodes, slurm needed, default: 1', default='1')
     parser.add_argument('-threads', type=str, help='threads, slurm needed, default: 1', default='1')
     parser.add_argument('-resource', type=str, help='resourse requirment, sge needed, default: vf=50M,p=1', default='vf=50M,p=1')
