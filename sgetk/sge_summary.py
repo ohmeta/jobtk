@@ -33,13 +33,17 @@ def human2bytes(s):
     while s and s[0:1].isdigit() or s[0:1] == '.':
         num += s[0]
         s = s[1:]
-    num = float(num)
+    if num != "":
+        num = float(num)
+    else:
+        raise ValueError(f"can't covert {s} to float")
     letter = s.strip()
+    #print(letter)
     for name, sset in SYMBOLS.items():
         if letter in sset:
             break
     else:
-        if letter == 'k':
+        if (letter == 'k') or (letter == "m") or (letter == "g"):
             # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
             sset = SYMBOLS['customary']
             letter = letter.upper()
@@ -141,7 +145,7 @@ def main():
                 mem_can_use = mem_total - mem_used
             total_mem_can_use += mem_can_use
             print(line.strip() + " " + bytes2human(mem_can_use))
-            
+
     print("\nsummary:")
     print("total st.q computer node : %d" % (count - 3))
     print("total st.q computer node (500G ~ ) : %d" % count_500G)
