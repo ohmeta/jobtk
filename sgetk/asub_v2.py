@@ -66,6 +66,10 @@ bash $jobscript\n''')
 
 
 def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, threads, logdir):
+    GPU_INFO = ""
+    if ("gpu" in partition_list) or ("gpu" in qos_list):
+        GPU_INFO = "#SBATCH --gres=gpu:1"
+
     submit_f = os.path.join(os.path.dirname(logdir), f"{job_name}_submit.sh")
     array_range = f"1-{total_job_num}:1"
     job_script = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.sh''')
@@ -80,6 +84,7 @@ def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, th
 #SBATCH -p {partition}
 #SBATCH --qos {qos}
 #SBATCH -N {node} 
+{GPU_INFO}
 #SBATCH --cpus-per-task={threads}
 #SBATCH -a {array_range}
 
