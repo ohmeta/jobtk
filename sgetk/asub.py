@@ -65,20 +65,28 @@ bash $jobscript\n''')
     subprocess.call(submit_cmd, shell=True)
 
 
-def submit_job_slurm(job_name, total_job_num, partition_list, node, threads, logdir):
+def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, threads, memory, logdir):
+    GPU_INFO = ""
+    if ("gpu" in partition_list) or ("gpu" in qos_list):
+        GPU_INFO = "#SBATCH --gres=gpu:1"
+
     submit_f = os.path.join(os.path.dirname(logdir), f"{job_name}_submit.sh")
     array_range = f"1-{total_job_num}:1"
     job_script = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.sh''')
     job_o = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.o''')
     job_e = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.e''')
     partition = ",".join(partition_list)
+    qos = ",".join(qos_list)
 
     with open(submit_f, 'w') as submit_h:
         submit_h.write(f'''#!/bin/bash\n\
 #SBATCH -J {job_name}
 #SBATCH -p {partition}
+#SBATCH --qos {qos}
 #SBATCH -N {node} 
+{GPU_INFO}
 #SBATCH --cpus-per-task={threads}
+#SBATCH --mem-per-cpu={memory}
 #SBATCH -a {array_range}
 
 echo "output: {job_o}"
@@ -101,9 +109,11 @@ def main():
     parser.add_argument('-jobline', type=int, help='set the number of lines to form a job, default: 1', default=1)
     parser.add_argument('-queue', type=str, help='submit queue, sge needed, default: st.q', default='st.q')
     parser.add_argument('-project', type=str, help='project id, sge needed, default: st.m', default='st.m')
-    parser.add_argument('-partition', nargs='*', help='partition, slurm needed, default: ["intel", "amd"]', default=['intel', 'amd'])
+    parser.add_argument('-partition', nargs='*', help='partition, slurm needed, default: ["intel", "amd"], you can choose from: intel, amd, gpu, hugemem', default=['intel', 'amd'])
+    parser.add_argument('-qos', nargs='*', help='qos, slurm needed, default: ["normal"], you can choose from: debug, normal, long, special, gpu, hugemem', default=["normal"])
     parser.add_argument('-node', type=str, help='nodes, slurm needed, default: 1', default='1')
     parser.add_argument('-threads', type=str, help='threads, slurm needed, default: 1', default='1')
+    parser.add_argument('-memory', type=str, help='memory of each cpu, slurm need, default: 3G', default='3G')
     parser.add_argument('-resource', type=str, help='resourse requirment, sge needed, default: vf=50M,p=1', default='vf=50M,p=1')
     parser.add_argument('-logdir', type=str, default=None, help='array job log directory, default: None')
     args = parser.parse_args()
@@ -131,7 +141,7 @@ def main():
     if args.system == "sge":
         submit_job_sge(args.jobname, total_job_num, args.queue, args.project, args.resource, args.logdir)
     elif args.system == "slurm":
-        submit_job_slurm(args.jobname, total_job_num, args.partition, args.node, args.threads, args.logdir)
+        submit_job_slurm(args.jobname, total_job_num, args.partition, args.qos, args.node, args.threads, args.memory, args.logdir)
 
 
 if __name__ == '__main__':
