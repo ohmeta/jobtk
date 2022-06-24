@@ -33,6 +33,7 @@ def parse_job(system, job_name, job_file, a_job_line, logdir):
         job_f = os.path.join(logdir, f"{job_name}_{job_num}.sh")
         df.iloc[i:i+a_job_line]\
           .to_csv(job_f, sep='\t', index=False, header=False, quoting=csv.QUOTE_NONE)
+        os.chmod(job_f, 0o744)
     return job_num
 
 
@@ -66,6 +67,16 @@ bash $jobscript\n''')
 
 
 def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, threads, memory, logdir):
+    """ 
+    Refer here: https://hpc.hku.hk/guide/slurm-guide/
+    Replacement Symbol  Description
+    %A  Job array’s master job allocation number
+    %a  Job array ID (index) number
+    %J  JobID.stepid of the running job (e.g. “128.0”)
+    %j  JobID of the running job
+    %x  Job name
+    """
+ 
     GPU_INFO = ""
     if ("gpu" in partition_list) or ("gpu" in qos_list):
         GPU_INFO = "#SBATCH --gres=gpu:1"
@@ -73,8 +84,8 @@ def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, th
     submit_f = os.path.join(os.path.dirname(logdir), f"{job_name}_submit.sh")
     array_range = f"1-{total_job_num}:1"
     job_script = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_TASK_ID}}.sh''')
-    job_o = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.o''')
-    job_e = os.path.join(logdir, f'''{job_name}_${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.e''')
+    job_out = os.path.join(logdir, f'''{job_name}_%a.out''')
+    job_err = os.path.join(logdir, f'''{job_name}_%a.err''')
     partition = ",".join(partition_list)
     qos = ",".join(qos_list)
 
@@ -88,14 +99,14 @@ def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, th
 #SBATCH --cpus-per-task={threads}
 #SBATCH --mem-per-cpu={memory}
 #SBATCH -a {array_range}
+#SBATCH --output={job_out}
+#SBATCH --error={job_err}
 
-echo "output: {job_o}"
-echo "error: {job_e}"
 bash {job_script}\n''')
 
     os.chmod(submit_f, 0o744)
     sbatch = shutil.which("sbatch")
-    submit_cmd = f"{sbatch} -o {job_o} -e {job_e} {submit_f}"
+    submit_cmd = f"{sbatch} {submit_f}"
     print(f"Running: {submit_cmd}")
     subprocess.call(submit_cmd, shell=True)
 
