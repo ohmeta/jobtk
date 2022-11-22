@@ -1,4 +1,4 @@
-# Sun Grid Engine ToolKit
+# Cluster Job ToolKit
 
 * Install
 ```bash
