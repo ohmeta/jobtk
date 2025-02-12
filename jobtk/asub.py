@@ -95,6 +95,7 @@ def submit_job_slurm(job_name, total_job_num, partition_list, qos_list, node, th
 #SBATCH -p {partition}
 #SBATCH --qos {qos}
 #SBATCH -N {node} 
+#SBATCH --ntasks=1
 {GPU_INFO}
 #SBATCH --cpus-per-task={threads}
 #SBATCH --mem-per-cpu={memory}
@@ -125,7 +126,7 @@ def main():
     parser.add_argument('-node', type=str, help='nodes, slurm needed, default: 1', default='1')
     parser.add_argument('-threads', type=str, help='threads, slurm needed, default: 1', default='1')
     parser.add_argument('-memory', type=str, help='memory of each cpu, slurm need, default: 3G', default='3G')
-    parser.add_argument('-resource', type=str, help='resourse requirment, sge needed, default: vf=50M,p=1', default='vf=50M,p=1')
+    parser.add_argument('-resource', type=str, help='resource requirment, sge needed, default: vf=50M,p=1', default='vf=50M,p=1')
     parser.add_argument('-logdir', type=str, default=None, help='array job log directory, default: None')
     args = parser.parse_args()
 
